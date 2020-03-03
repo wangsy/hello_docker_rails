@@ -1,0 +1,42 @@
+version: '3'
+services:
+  database:
+    image: mysql:5.7.29
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=really_long_password
+  
+  web:
+    build: .
+    volumes:
+      - .:/myapp
+      - gem_cache:/gems
+    ports:
+      - "3000:3000"
+    environment:
+      - MYSQL_ROOT_PASSWORD=really_long_password
+      - WEBPACKER_DEV_SERVER_HOST=webpack_dev_server
+    depends_on:
+      - database
+
+  webpack_dev_server:
+    build: .
+    command: bin/webpack-dev-server
+    volumes:
+      - .:/myapp
+      - gem_cache:/gems
+    ports:
+      - "3035:3035"
+    environment:
+      - MYSQL_ROOT_PASSWORD=really_long_password
+      - WEBPACKER_DEV_SERVER_HOST=0.0.0.0
+    depends_on:
+      - database
+
+  
+volumes:
+  db_data:
+  gem_cache:

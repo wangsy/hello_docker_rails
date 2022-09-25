@@ -17,35 +17,11 @@ services:
     ports:
       - "3000:3000"
     environment:
+      - POSTGRES_PASSWORD=postgres
       - POSTGRES_PASSWORD=password
       - REDIS_URL=redis://redis:6379/0
     depends_on:
       - redis
-      - database
-  sidekiq:
-    build: .
-    command: bundle exec sidekiq
-    volumes:
-      - .:/myapp
-      - gem_cache:/gems
-    environment:
-      - POSTGRES_PASSWORD=password
-      - REDIS_URL=redis://redis:6379/0
-    depends_on:
-      - redis
-      - database
-  webpack_dev_server:
-    build: .
-    command: bin/webpack-dev-server
-    volumes:
-      - .:/myapp
-      - gem_cache:/gems
-    ports:
-      - "3035:3035"
-    environment:
-      - POSTGRES_PASSWORD=password
-      - WEBPACKER_DEV_SERVER_HOST=0.0.0.0
-    depends_on:
       - database
 volumes:
   db_data:

@@ -12,14 +12,12 @@ or make following files
 ```Dockerfile
 FROM ruby:3.1.2
 RUN apt-get update -qq && apt-get install curl
-RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
-RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
 
 RUN curl -sL https://deb.nodesource.com/setup_18.x | bash -
 RUN apt-get update -qq && apt-get install -y \
       nodejs \
-      yarn \
       postgresql-client
+RUN npm install --global yarn
 
 RUN mkdir /myapp
 WORKDIR /myapp
@@ -40,23 +38,34 @@ CMD ["bundle", "exec", "rails", "server", "-b", "0.0.0.0"]
 
 `docker-compose.yml`
 ```
-version: "3.9"
+version: '3'
 services:
-  db:
+  redis:
+    image: redis
+  database:
     image: postgres
     volumes:
       - ./tmp/db:/var/lib/postgresql/data
+    restart: always
     environment:
-      POSTGRES_PASSWORD: password
+      - POSTGRES_PASSWORD=password
   web:
     build: .
-    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails s -p 3000 -b '0.0.0.0'"
     volumes:
       - .:/myapp
+      - gem_cache:/gems
     ports:
       - "3000:3000"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_PASSWORD=password
+      - REDIS_URL=redis://redis:6379/0
     depends_on:
-      - db
+      - redis
+      - database
+volumes:
+  db_data:
+  gem_cache:
 ```
 
 `entrypoint.sh`
@@ -72,45 +81,39 @@ exec "$@"
 ```
 
 `Gemfile`
-```
+```Gemfile
 source 'https://rubygems.org'
 gem 'rails', '~>7'
 ```
 
 and make `Gemfile.lock`
 ```sh
-$ touch Gemfile.lock
-```
-
-and then
-```sh
-$ docker compose run --no-deps web rails new . --force --database=postgresql
-
+touch Gemfile.lock
 ```
 
 ## Create a new rails project
 
-```
-$ docker-compose run web bundle exec rails new . --skip --database=mysql --webpack=stimulus
+```sh
+docker-compose run --no-deps web bundle exec rails new . --force -a propshaft -j esbuild --database=postgresql --skip-test --css tailwind
 ```
 
 ## Build again (with newly created rails source code, especially Gemfile)
 
-```
-$ docker-compose build
+```sh
+docker-compose build
 ```
 
 ## DB Creation & Migration
 
-```
-$ cp database.yml config/
-$ docker-compose run --rm web bundle exec rails db:create db:migrate
+```sh
+cp database.yml config/
+docker-compose run --rm web bundle exec rails db:create db:migrate
 ```
 
 ## Start running
 
-```
-$ docker-compose up
+```sh
+docker-compose up
 ```
 ## Connect to server
 
@@ -119,7 +122,7 @@ http://localhost:3000
 ## Sidekiq setting
 
 `Gemfile`
-```
+```Gemfile
 gem 'sidekiq'
 ```
 
@@ -135,28 +138,28 @@ module Myapp
 ## Push image to ECR
 
 add tag to docker image
-```
+```sh
 docker build -t hello_docker_rails .
 ```
 
 create repository in ECR
-```
+```sh
 aws ecr create-repository --repository-name hello_docker_rails --region ap-northeast-2
 ```
 
 add repository tag to image
-```
+```sh
 aws_account_id ==> registryId
 
 docker tag hello-world aws_account_id.dkr.ecr.ap-northeast-2.amazonaws.com/hello_docker_rails
 ```
 
 login to ECR
-```
+```sh
 aws ecr get-login-password | docker login --username AWS --password-stdin aws_account_id.dkr.ecr.ap-northeast-2.amazonaws.com
 ```
 
 push image to ECR
-```
+```sh
 docker push aws_account_id.dkr.ecr.region.amazonaws.com/hello_docker_rails
 ```

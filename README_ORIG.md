@@ -51,13 +51,14 @@ services:
       - POSTGRES_PASSWORD=password
   web:
     build: .
+    command: tail -f /dev/null
     volumes:
       - .:/myapp
       - gem_cache:/gems
     ports:
       - "3000:3000"
     environment:
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USERNAME=postgres
       - POSTGRES_PASSWORD=password
       - REDIS_URL=redis://redis:6379/0
     depends_on:

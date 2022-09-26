@@ -111,6 +111,13 @@ cp database.yml config/
 docker-compose run --rm web bundle exec rails db:create db:migrate
 ```
 
+## Change Profile.dev
+```
+web: bin/rails server -p 3000 -b 0.0.0.0
+js: yarn build --watch
+css: yarn build:css --watch
+```
+
 ## Start running
 
 ```sh

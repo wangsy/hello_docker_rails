@@ -1,5 +1,5 @@
 FROM ruby:3.1.2
-RUN apt-get update -qq && apt-get install curl
+RUN apt-get update -qq && apt-get install -y curl
 
 RUN curl -sL https://deb.nodesource.com/setup_18.x | bash -
 RUN apt-get update -qq && apt-get install -y \

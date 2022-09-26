@@ -128,6 +128,13 @@ docker compose exec web sh -c "bin/dev"
 
 http://localhost:3000
 
+## Add TypeScript support
+```
+docker compose exec web yarn add --dev typescript tsc-watch
+docker compose exec web yarn add --dev @typescript-eslint/parser
+docker compose exec web yarn add --dev @typescript-eslint/eslint-plugin
+```
+
 ## Sidekiq setting
 
 `Gemfile`

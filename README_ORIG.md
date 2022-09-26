@@ -115,6 +115,7 @@ docker-compose run --rm web bundle exec rails db:create db:migrate
 
 ```sh
 docker-compose up
+docker compose exec web sh -c "bin/dev"
 ```
 ## Connect to server
 
